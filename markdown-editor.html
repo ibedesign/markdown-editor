@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マークダウンエディタ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 4px;
+            padding: 12px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            flex-wrap: wrap;
+            position: relative;
+        }
+
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .preview-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            background: white;
+            position: relative;
+        }
+
+        .toolbar button {
+            padding: 8px 12px;
+            border: 1px solid #d0d0d0;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .toolbar button:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+
+        .toolbar button:active {
+            background: #e0e0e0;
+        }
+
+        #editor {
+            flex: 1;
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #d0d0d0;
+            padding: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            font-family: 'Consolas', 'Monaco', monospace;
+            margin: 0;
+        }
+
+        #editor:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .preview-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            position: relative;
+        }
+
+        .preview-container .copy-button {
+            position: absolute;
+            top: 8px;
+            right: 24px;
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            z-index: 10;
+        }
+
+        .preview-container .copy-button:hover {
+            background: #45a049;
+        }
+
+        .preview-container .copy-button.copied {
+            background: #2196F3;
+        }
+
+        #htmlPreview {
+            flex: 1;
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #d0d0d0;
+            padding: 16px;
+            padding-top: 16px;
+            padding-right: 120px;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #fafafa;
+            margin: 0;
+        }
+
+        #htmlPreview:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+
+        .guide-toggle {
+            position: absolute;
+            top: 12px;
+            right: 20px;
+            padding: 8px 16px;
+            background: #e3f2fd;
+            color: #1976D2;
+            border: 2px solid #2196F3;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-size: 13px;
+            font-weight: bold;
+            z-index: 1000;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .guide-toggle:hover {
+            background: #bbdefb;
+            border-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .guide-toggle::before {
+            content: '🔰';
+            font-size: 16px;
+        }
+
+        .guide-section {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 625px;
+            height: 100vh;
+            background: white;
+            border-left: 1px solid #e0e0e0;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.2);
+            padding: 30px;
+            padding-bottom: 50px;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 999;
+        }
+
+        .guide-section.active {
+            transform: translateX(0);
+        }
+
+        .guide-section h2 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+
+        .guide-section h3 {
+            color: #2196F3;
+            font-size: 18px;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
+        .guide-section p {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.8;
+            margin: 8px 0;
+            margin-left: 10px;
+        }
+
+        .guide-section code {
+            background: #f0f0f0;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            color: #d63384;
+        }
+
+        .guide-section ul {
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+
+        .guide-section li {
+            color: #666;
+            margin: 5px 0;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .guide-section {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <button onclick="applyFormat('h1')" title="見出し1">H1</button>
+        <button onclick="applyFormat('h2')" title="見出し2">H2</button>
+        <button onclick="applyFormat('h3')" title="見出し3">H3</button>
+        <button onclick="applyFormat('bold')" title="太字"><strong>B</strong></button>
+        <button onclick="applyFormat('ul')" title="箇条書き">•</button>
+        <button onclick="applyFormat('ol')" title="番号付きリスト">1.</button>
+        <button onclick="applyFormat('caption')" title="キャプション">（C</button>
+        <button onclick="applyFormat('image')" title="画像">画像</button>
+        <button onclick="applyFormat('paragraph')" title="段落">P</button>
+        <button onclick="insertHR()" title="水平線">---</button>
+        <button onclick="deleteLine()" title="削除" style="color: #d32f2f;">削除</button>
+        <button onclick="insertLineBreak()" title="改行">改行</button>
+        <button class="guide-toggle" onclick="toggleGuide()">使い方ガイド</button>
+    </div>
+    
+    <div class="content-wrapper">
+        <div class="editor-container">
+            <textarea id="editor" placeholder="ここにテキストを入力してください..."></textarea>
+        </div>
+        <div class="preview-container">
+            <button class="copy-button" onclick="copyHTML()">HTMLをコピー</button>
+            <textarea id="htmlPreview" readonly placeholder="HTMLコードがここに表示されます..."></textarea>
+        </div>
+    </div>
+
+    <div class="guide-section" id="guideSection">
+        <h2>📖 使い方ガイド</h2>
+        
+        <h3>💡 基本の使い方</h3>
+        <p>1. 左側のエディタにテキストを入力</p>
+        <p>2. ツールバーのボタンで書式を適用（テキスト選択 or カーソルを行に配置）</p>
+        <p>3. 右側にHTMLコードがリアルタイムで生成されます</p>
+        <p>4. 「HTMLをコピー」ボタンでクリップボードにコピー</p>
+
+        <h3>🛠️ ツールバーの機能</h3>
+        <p><strong>H1, H2, H3:</strong> 見出しを適用（カーソルがある行全体に適用されます）</p>
+        <p><strong>B:</strong> 太字を適用（選択テキストを <code>**</code> で囲みます）</p>
+        <p><strong>• (箇条書き):</strong> 箇条書きリストを作成（行頭に <code>-</code> を追加）</p>
+        <p><strong>1. (番号付き):</strong> 番号付きリストを作成（行頭に <code>1. 2. 3...</code> を追加）</p>
+        <p><strong>（C:</strong> キャプション記号を追加
+            <br>　- テキストがある行：末尾に <code>（C</code> を追加 → 変換後は <code>テキスト（キャプション</code>
+            <br>　- 空白行：<code>（C</code> を挿入 → 変換後は <code>（キャプション</code>
+        </p>
+        <p><strong>画像:</strong> <code>★画像</code> マーカーを挿入（変換後もそのまま <code>★画像</code>）</p>
+        <p><strong>P:</strong> 選択した行を段落として扱う（前後に空行を追加して <code>&lt;p&gt;</code> タグで囲む）</p>
+        <p><strong>--- (水平線):</strong> 水平線 <code>---</code> を挿入（変換後は <code>&lt;hr&gt;</code>）</p>
+        <p><strong>削除:</strong> 選択テキスト or カーソルがある行を削除</p>
+        <p><strong>改行:</strong> カーソル位置に改行を挿入</p>
+
+        <h3>📺 YouTube対応</h3>
+        <p>YouTubeのURLをそのまま貼り付けると自動的に埋め込みコードに変換されます</p>
+        <p>例: <code>https://www.youtube.com/watch?v=VIDEO_ID</code> または <code>https://youtu.be/VIDEO_ID</code></p>
+
+        <h3>🔗 URL自動リンク</h3>
+        <p>YouTube以外のURLは自動的にリンクタグ（<code>&lt;a&gt;</code>）に変換されます</p>
+        <p>URL単独の行は別段落として出力されます</p>
+
+        <h3>🖼️ 画像プレースホルダー</h3>
+        <p><code>★画像</code> と入力すると、そのままの形で出力されます（WordPress用）</p>
+        <p>pタグで囲まれず、直前のテキストとの間に改行も入りません</p>
+
+        <h3>📝 キャプション記法</h3>
+        <p>行末が <code>（c</code> または <code>（C</code> の場合、自動的に <code>（キャプション</code> に変換されます</p>
+        <p>pタグで囲まれずに出力されます</p>
+        <p>例: <code>テキスト（c</code> → <code>テキスト（キャプション</code></p>
+
+        <h3>📏 水平線</h3>
+        <p><code>---</code> で水平線（<code>&lt;hr&gt;</code>）が挿入されます</p>
+
+        <h3>✍️ 改行とPタグ</h3>
+        <p>単一改行は <code>&lt;br&gt;</code> タグに変換され、普通のテキストは <code>&lt;p&gt;</code> タグで囲まれます</p>
+        <p>空行で段落が区切られます</p>
+
+        <h3>📝 マークダウン記法の例</h3>
+        <p><strong>見出し:</strong></p>
+        <p><code># 見出し1</code> → <code>&lt;h1&gt;見出し1&lt;/h1&gt;</code></p>
+        <p><code>## 見出し2</code> → <code>&lt;h2&gt;見出し2&lt;/h2&gt;</code></p>
+        <p><code>### 見出し3</code> → <code>&lt;h3&gt;見出し3&lt;/h3&gt;</code></p>
+
+        <p><strong>太字:</strong></p>
+        <p><code>**太字**</code> → <code>&lt;strong&gt;太字&lt;/strong&gt;</code></p>
+
+        <p><strong>箇条書きリスト:</strong></p>
+        <p><code>- 項目1</code><br><code>- 項目2</code> → <code>&lt;ul&gt;&lt;li&gt;項目1&lt;/li&gt;&lt;li&gt;項目2&lt;/li&gt;&lt;/ul&gt;</code></p>
+
+        <p><strong>番号付きリスト:</strong></p>
+        <p><code>1. 項目1</code><br><code>2. 項目2</code> → <code>&lt;ol&gt;&lt;li&gt;項目1&lt;/li&gt;&lt;li&gt;項目2&lt;/li&gt;&lt;/ol&gt;</code></p>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const htmlPreview = document.getElementById('htmlPreview');
+
+        // テキストエリアの入力を監視
+        editor.addEventListener('input', updatePreview);
+
+        function applyFormat(format) {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            
+            // 画像ボタンの場合は特別処理
+            if (format === 'image') {
+                const beforeText = editor.value.substring(0, start);
+                const afterText = editor.value.substring(end);
+                editor.value = beforeText + '★画像\n' + afterText;
+                const newPosition = start + 4;
+                editor.setSelectionRange(newPosition, newPosition);
+                editor.focus();
+                updatePreview();
+                return;
+            }
+            
+            let selectedText = editor.value.substring(start, end);
+            let realStart = start;
+            let realEnd = end;
+            
+            // テキストが選択されていない場合、カーソルがある行全体を取得
+            if (start === end) {
+                const text = editor.value;
+                let lineStart = start;
+                let lineEnd = end;
+                
+                // 行の開始位置を探す
+                while (lineStart > 0 && text[lineStart - 1] !== '\n') {
+                    lineStart--;
+                }
+                
+                // 行の終了位置を探す
+                while (lineEnd < text.length && text[lineEnd] !== '\n') {
+                    lineEnd++;
+                }
+                
+                selectedText = text.substring(lineStart, lineEnd);
+                realStart = lineStart;
+                realEnd = lineEnd;
+            }
+            
+            if (!selectedText.trim() && format !== 'caption') {
+                alert('テキストを選択するか、カーソルを行に配置してください');
+                return;
+            }
+
+            let newText = '';
+            const beforeText = editor.value.substring(0, realStart);
+            const afterText = editor.value.substring(realEnd);
+
+            switch(format) {
+                case 'h1':
+                    newText = '# ' + selectedText;
+                    break;
+                case 'h2':
+                    newText = '## ' + selectedText;
+                    break;
+                case 'h3':
+                    newText = '### ' + selectedText;
+                    break;
+                case 'bold':
+                    newText = '**' + selectedText + '**';
+                    break;
+                case 'ul':
+                    newText = selectedText.split('\n').map(line => line.trim() ? '- ' + line.trim() : line).join('\n');
+                    break;
+                case 'ol':
+                    newText = selectedText.split('\n').map((line, i) => line.trim() ? `${i + 1}. ${line.trim()}` : line).join('\n');
+                    break;
+                case 'caption':
+                    // 空白行の場合は（Cを挿入、それ以外は末尾に（Cを追加
+                    if (!selectedText.trim()) {
+                        newText = '（C';
+                    } else {
+                        newText = selectedText + '（C';
+                    }
+                    break;
+                case 'paragraph':
+                    // 行の前後に空行を追加して段落として扱う
+                    newText = '\n' + selectedText + '\n';
+                    break;
+            }
+
+            editor.value = beforeText + newText + afterText;
+            
+            // カーソル位置を調整
+            const newPosition = realStart + newText.length;
+            editor.setSelectionRange(newPosition, newPosition);
+            editor.focus();
+            
+            updatePreview();
+        }
+
+        function insertHR() {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const beforeText = editor.value.substring(0, start);
+            const afterText = editor.value.substring(end);
+            
+            editor.value = beforeText + '---\n' + afterText;
+            const newPosition = start + 4;
+            editor.setSelectionRange(newPosition, newPosition);
+            editor.focus();
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const text = editor.value;
+            const html = convertToHTML(text);
+            htmlPreview.value = html;
+        }
+
+        function convertToHTML(text) {
+            if (!text.trim()) return '';
+
+            // YouTube埋め込み（最優先で処理）
+            text = text.replace(/https?:\/\/(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)(?:[^\s]*)?/g, (match, videoId) => {
+                return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+            });
+            
+            text = text.replace(/https?:\/\/(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)(?:[^\s]*)?/g, (match, videoId) => {
+                return `<iframe width="560" height="315" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+            });
+
+            let lines = text.split('\n');
+            let html = '';
+            let inList = false;
+            let listType = '';
+            let paragraphBuffer = [];
+
+            function flushParagraph() {
+                if (paragraphBuffer.length > 0) {
+                    const content = paragraphBuffer.join('<br>');
+                    html += '<p>' + processInlineFormatting(content) + '</p>\n';
+                    paragraphBuffer = [];
+                }
+            }
+
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i];
+
+                // 空行 - 段落を区切る
+                if (line.trim() === '') {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                        inList = false;
+                    }
+                    html += '\n';
+                    continue;
+                }
+
+                // 水平線
+                if (line.trim() === '---') {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                        inList = false;
+                    }
+                    html += '<hr>\n';
+                    continue;
+                }
+
+                // 見出し
+                if (line.startsWith('### ')) {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>' : '</ol>';
+                        inList = false;
+                    }
+                    html += '<h3>' + line.substring(4) + '</h3>\n';
+                    continue;
+                }
+                if (line.startsWith('## ')) {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>' : '</ol>';
+                        inList = false;
+                    }
+                    html += '<h2>' + line.substring(3) + '</h2>\n';
+                    continue;
+                }
+                if (line.startsWith('# ')) {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>' : '</ol>';
+                        inList = false;
+                    }
+                    html += '<h1>' + line.substring(2) + '</h1>\n';
+                    continue;
+                }
+
+                // 箇条書きリスト
+                if (line.match(/^[-*]\s/)) {
+                    flushParagraph();
+                    if (!inList || listType !== 'ul') {
+                        if (inList && listType === 'ol') html += '</ol>\n';
+                        html += '<ul>\n';
+                        inList = true;
+                        listType = 'ul';
+                    }
+                    html += '  <li>' + processInlineFormatting(line.substring(2)) + '</li>\n';
+                    continue;
+                }
+
+                // 番号付きリスト
+                if (line.match(/^\d+\.\s/)) {
+                    flushParagraph();
+                    if (!inList || listType !== 'ol') {
+                        if (inList && listType === 'ul') html += '</ul>\n';
+                        html += '<ol>\n';
+                        inList = true;
+                        listType = 'ol';
+                    }
+                    html += '  <li>' + processInlineFormatting(line.replace(/^\d+\.\s/, '')) + '</li>\n';
+                    continue;
+                }
+
+                // ★画像マーカー
+                if (line.startsWith('★画像')) {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                        inList = false;
+                    }
+                    html += '★画像\n';
+                    continue;
+                }
+
+                // （Cマーカー（キャプションのみ）
+                if (line.trim() === '（C' || line.trim() === '（c') {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                        inList = false;
+                    }
+                    html += '（キャプション\n';
+                    continue;
+                }
+
+                // キャプション処理（テキスト（C → テキスト（キャプション）
+                const captionMatch = line.match(/(.+?)（[Cc]$/);
+                if (captionMatch) {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                        inList = false;
+                    }
+                    html += processInlineFormatting(captionMatch[1]) + '（キャプション\n';
+                    continue;
+                }
+
+                // YouTube埋め込み（iframe）が含まれる行
+                if (line.includes('<iframe')) {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                        inList = false;
+                    }
+                    html += line + '\n';
+                    continue;
+                }
+
+                // URL単独行
+                const urlOnlyMatch = line.trim().match(/^(https?:\/\/[^\s]+)$/);
+                if (urlOnlyMatch) {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                        inList = false;
+                    }
+                    html += '<p><a href="' + urlOnlyMatch[1] + '" target="_blank">' + urlOnlyMatch[1] + '</a></p>\n';
+                    continue;
+                }
+
+                // 通常のテキスト（段落バッファに追加）
+                if (inList) {
+                    html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                    inList = false;
+                }
+                paragraphBuffer.push(line);
+            }
+
+            // 最後の段落をフラッシュ
+            flushParagraph();
+
+            // リストが開いたままの場合は閉じる
+            if (inList) {
+                html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+            }
+
+            return html;
+        }
+
+        function processInlineFormatting(text) {
+            // 太字
+            text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            // URL自動リンク（YouTube以外）
+            text = text.replace(/(https?:\/\/(?!(?:www\.)?(?:youtube\.com|youtu\.be))[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+            return text;
+        }
+
+        function deleteLine() {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            
+            // テキストが選択されている場合は選択部分のみ削除
+            if (start !== end) {
+                const beforeText = editor.value.substring(0, start);
+                const afterText = editor.value.substring(end);
+                editor.value = beforeText + afterText;
+                editor.setSelectionRange(start, start);
+                editor.focus();
+                updatePreview();
+                return;
+            }
+            
+            // 選択されていない場合はカーソルがある行全体を削除
+            const text = editor.value;
+            let lineStart = start;
+            let lineEnd = end;
+            
+            // 行の開始位置を探す
+            while (lineStart > 0 && text[lineStart - 1] !== '\n') {
+                lineStart--;
+            }
+            
+            // 行の終了位置を探す（改行も含める）
+            while (lineEnd < text.length && text[lineEnd] !== '\n') {
+                lineEnd++;
+            }
+            if (lineEnd < text.length) {
+                lineEnd++; // 改行文字も削除
+            }
+            
+            const beforeText = text.substring(0, lineStart);
+            const afterText = text.substring(lineEnd);
+            editor.value = beforeText + afterText;
+            
+            // カーソル位置を調整
+            editor.setSelectionRange(lineStart, lineStart);
+            editor.focus();
+            updatePreview();
+        }
+
+        function insertLineBreak() {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const beforeText = editor.value.substring(0, start);
+            const afterText = editor.value.substring(end);
+            
+            editor.value = beforeText + '\n' + afterText;
+            const newPosition = start + 1;
+            editor.setSelectionRange(newPosition, newPosition);
+            editor.focus();
+            updatePreview();
+        }
+
+        function copyHTML() {
+            const html = htmlPreview.value;
+            navigator.clipboard.writeText(html).then(() => {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'コピーしました！';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                alert('コピーに失敗しました');
+            });
+        }
+
+        function toggleGuide() {
+            const guideSection = document.getElementById('guideSection');
+            guideSection.classList.toggle('active');
+        }
+
+        // 初期化
+        updatePreview();
+    </script>
+</body>
+</html>
