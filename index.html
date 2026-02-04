@@ -333,6 +333,7 @@
         <button onclick="insertHR()" title="水平線">---</button>
         <button onclick="deleteLine()" title="削除" style="color: #d32f2f;">削除</button>
         <button onclick="insertLineBreak()" title="改行">改行</button>
+        <button onclick="resetAll()" title="リセット">リセット</button>
         <button class="guide-toggle" onclick="toggleGuide()">使い方ガイド</button>
     </div>
     
@@ -856,6 +857,14 @@
         function toggleGuide() {
             const guideSection = document.getElementById('guideSection');
             guideSection.classList.toggle('active');
+        }
+
+        function resetAll() {
+            if (confirm('すべてクリアしますか？')) {
+                editor.value = '';
+                updatePreview();
+                editor.focus();
+            }
         }
 
         // 初期化
