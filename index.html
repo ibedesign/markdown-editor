@@ -29,6 +29,8 @@
             border-bottom: 1px solid #e0e0e0;
             flex-wrap: wrap;
             position: relative;
+            justify-content: flex-start;
+            padding-left: 50%;
         }
 
         .content-wrapper {
@@ -218,7 +220,7 @@
         .guide-toggle {
             position: absolute;
             top: 12px;
-            right: 20px;
+            left: 20px;
             padding: 8px 16px;
             background: #e3f2fd;
             color: #1976D2;
@@ -250,16 +252,16 @@
         .guide-section {
             position: fixed;
             top: 0;
-            right: 0;
+            left: 0;
             width: 625px;
             height: 100vh;
             background: white;
-            border-left: 1px solid #e0e0e0;
-            box-shadow: -4px 0 20px rgba(0,0,0,0.2);
+            border-right: 1px solid #e0e0e0;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.2);
             padding: 30px;
             padding-bottom: 50px;
             overflow-y: auto;
-            transform: translateX(100%);
+            transform: translateX(-100%);
             transition: transform 0.3s ease;
             z-index: 999;
         }
@@ -321,6 +323,7 @@
 </head>
 <body>
     <div class="toolbar">
+        <button class="guide-toggle" onclick="toggleGuide()">使い方ガイド</button>
         <button onclick="applyFormat('h1')" title="見出し1">H1</button>
         <button onclick="applyFormat('h2')" title="見出し2">H2</button>
         <button onclick="applyFormat('h3')" title="見出し3">H3</button>
@@ -335,7 +338,6 @@
         <button onclick="deleteLine()" title="削除" style="color: #d32f2f;">削除</button>
         <button onclick="insertLineBreak()" title="改行">改行</button>
         <button onclick="resetAll()" title="リセット">リセット</button>
-        <button class="guide-toggle" onclick="toggleGuide()">使い方ガイド</button>
     </div>
     
     <div class="content-wrapper">
