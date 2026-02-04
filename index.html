@@ -129,6 +129,7 @@
             resize: none;
             font-family: 'Segoe UI', sans-serif;
             background: #f9f9f9;
+            user-select: all;
         }
 
         #titlePreview:focus {
@@ -206,6 +207,7 @@
             resize: none;
             font-family: 'Consolas', 'Monaco', monospace;
             background: #fafafa;
+            user-select: all;
         }
 
         #htmlPreview:focus {
@@ -342,12 +344,12 @@
             <div class="title-area">
                 <label>タイトル（H1を入力すると自動で表示されます）</label>
                 <textarea id="titlePreview" readonly placeholder="H1見出しがここに表示されます..."></textarea>
-                <button class="copy-button" onclick="copyTitle()">コピー</button>
+                <button class="copy-button" onclick="copyTitle(event)">コピー</button>
             </div>
             <div class="html-area">
                 <label>HTMLコード</label>
                 <textarea id="htmlPreview" readonly placeholder="HTMLコードがここに表示されます..."></textarea>
-                <button class="copy-button" onclick="copyHTML()">コピー</button>
+                <button class="copy-button" onclick="copyHTML(event)">コピー</button>
             </div>
         </div>
     </div>
@@ -593,7 +595,7 @@
                     continue;
                 }
 
-                // 見出し（H1はタイトルとして抽出）
+                // 見出し（H1はタイトルとして抽出、HTMLには含めない）
                 if (line.startsWith('# ')) {
                     flushParagraph();
                     if (inList) {
@@ -601,8 +603,7 @@
                         inList = false;
                     }
                     const h1Text = line.substring(2);
-                    title = h1Text; // タイトルとして保存
-                    html += '<h1>' + h1Text + '</h1>\n';
+                    title = h1Text; // タイトルとして保存（HTMLには含めない）
                     continue;
                 }
                 if (line.startsWith('### ')) {
@@ -789,10 +790,18 @@
             updatePreview();
         }
 
-        function copyHTML() {
+        function copyHTML(e) {
+            e.preventDefault();
             const html = htmlPreview.value;
-            navigator.clipboard.writeText(html).then(() => {
-                const button = event.target;
+            if (!html.trim()) {
+                alert('HTMLコードがありません');
+                return;
+            }
+            
+            htmlPreview.select();
+            try {
+                document.execCommand('copy');
+                const button = e.currentTarget;
                 const originalText = button.textContent;
                 button.textContent = 'コピーしました！';
                 button.classList.add('copied');
@@ -801,19 +810,24 @@
                     button.textContent = originalText;
                     button.classList.remove('copied');
                 }, 2000);
-            }).catch(err => {
+            } catch (err) {
+                console.error('Copy error:', err);
                 alert('コピーに失敗しました');
-            });
+            }
         }
 
-        function copyTitle() {
+        function copyTitle(e) {
+            e.preventDefault();
             const title = titlePreview.value;
             if (!title.trim()) {
                 alert('タイトルがありません');
                 return;
             }
-            navigator.clipboard.writeText(title).then(() => {
-                const button = event.target;
+            
+            titlePreview.select();
+            try {
+                document.execCommand('copy');
+                const button = e.currentTarget;
                 const originalText = button.textContent;
                 button.textContent = 'コピーしました！';
                 button.classList.add('copied');
@@ -822,9 +836,10 @@
                     button.textContent = originalText;
                     button.classList.remove('copied');
                 }, 2000);
-            }).catch(err => {
+            } catch (err) {
+                console.error('Copy error:', err);
                 alert('コピーに失敗しました');
-            });
+            }
         }
 
         function toggleGuide() {
