@@ -860,11 +860,9 @@
         }
 
         function resetAll() {
-            if (confirm('すべてクリアしますか？')) {
-                editor.value = '';
-                updatePreview();
-                editor.focus();
-            }
+            editor.value = '';
+            updatePreview();
+            editor.focus();
         }
 
         // 初期化
