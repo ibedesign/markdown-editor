@@ -328,6 +328,7 @@
         <button onclick="applyFormat('ul')" title="箇条書き">•</button>
         <button onclick="applyFormat('ol')" title="番号付きリスト">1.</button>
         <button onclick="applyFormat('caption')" title="キャプション">（C</button>
+        <button onclick="applyFormat('alt')" title="ALT">（ALT</button>
         <button onclick="applyFormat('image')" title="画像">画像</button>
         <button onclick="applyFormat('paragraph')" title="段落">P</button>
         <button onclick="insertHR()" title="水平線">---</button>
@@ -476,7 +477,7 @@
                 realEnd = lineEnd;
             }
             
-            if (!selectedText.trim() && format !== 'caption') {
+            if (!selectedText.trim() && format !== 'caption' && format !== 'alt') {
                 alert('テキストを選択するか、カーソルを行に配置してください');
                 return;
             }
@@ -518,6 +519,19 @@
                     } else {
                         // テキストがある場合
                         newText = prefix + selectedText + '（C';
+                    }
+                    break;
+                case 'alt':
+                    // ALTは直前に改行を入れる
+                    const needsPrefixAlt = realStart > 0 && editor.value[realStart - 1] !== '\n';
+                    const prefixAlt = needsPrefixAlt ? '\n' : '';
+                    
+                    if (!selectedText.trim()) {
+                        // 空白行の場合
+                        newText = prefixAlt + '（ALT';
+                    } else {
+                        // テキストがある場合
+                        newText = prefixAlt + selectedText + '（ALT';
                     }
                     break;
                 case 'paragraph':
@@ -688,6 +702,17 @@
                     continue;
                 }
 
+                // （ALTマーカー（ALTのみ） → ALT）
+                if (line.trim() === '（ALT' || line.trim() === '（alt') {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                        inList = false;
+                    }
+                    html += 'ALT）\n';
+                    continue;
+                }
+
                 // キャプション処理（テキスト（C → <p>テキスト</p>）
                 const captionMatch = line.match(/(.+?)（[Cc]$/);
                 if (captionMatch) {
@@ -697,6 +722,18 @@
                         inList = false;
                     }
                     html += '<p>' + processInlineFormatting(captionMatch[1]) + '</p>\n';
+                    continue;
+                }
+
+                // ALT処理（テキスト（ALT → ALT）テキスト）
+                const altMatch = line.match(/(.+?)（(?:ALT|alt)$/);
+                if (altMatch) {
+                    flushParagraph();
+                    if (inList) {
+                        html += listType === 'ul' ? '</ul>\n' : '</ol>\n';
+                        inList = false;
+                    }
+                    html += 'ALT）' + processInlineFormatting(altMatch[1]) + '\n';
                     continue;
                 }
 
