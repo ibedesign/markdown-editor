@@ -862,6 +862,19 @@
             guideSection.classList.toggle('active');
         }
 
+        // メニュー外クリックで閉じる
+        document.addEventListener('click', function(e) {
+            const guideSection = document.getElementById('guideSection');
+            const guideToggle = document.querySelector('.guide-toggle');
+            
+            // ガイドが開いていて、クリックがガイドメニュー外かつトグルボタン外の場合
+            if (guideSection.classList.contains('active') && 
+                !guideSection.contains(e.target) && 
+                !guideToggle.contains(e.target)) {
+                guideSection.classList.remove('active');
+            }
+        });
+
         function resetAll() {
             editor.value = '';
             updatePreview();
