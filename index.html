@@ -42,7 +42,7 @@
             display: flex;
             flex-direction: column;
             background: white;
-            border-right: 1px solid #e0e0e0;
+            border-left: 1px solid #e0e0e0;
         }
 
         .preview-container {
@@ -339,9 +339,6 @@
     </div>
     
     <div class="content-wrapper">
-        <div class="editor-container">
-            <textarea id="editor" placeholder="ここにテキストを入力してください..."></textarea>
-        </div>
         <div class="preview-container">
             <div class="title-area">
                 <label>タイトル（H1を入力すると自動で表示されます）</label>
@@ -353,6 +350,9 @@
                 <textarea id="htmlPreview" readonly placeholder="HTMLコードがここに表示されます..."></textarea>
                 <button class="copy-button" onclick="copyHTML(event)">コピー</button>
             </div>
+        </div>
+        <div class="editor-container">
+            <textarea id="editor" placeholder="ここにテキストを入力してください..."></textarea>
         </div>
     </div>
 
