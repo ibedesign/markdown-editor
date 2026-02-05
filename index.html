@@ -22,25 +22,35 @@
         }
 
         .toolbar {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 4px;
             padding: 12px;
             background: #fafafa;
             border-bottom: 1px solid #e0e0e0;
-            flex-wrap: wrap;
             position: relative;
-            justify-content: flex-start;
-            padding-left: 50%;
+        }
+
+        .toolbar::before {
+            content: '';
+            grid-column: 1;
+        }
+
+        .toolbar-buttons {
+            grid-column: 2;
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
         }
 
         .content-wrapper {
             flex: 1;
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             overflow: hidden;
         }
 
         .editor-container {
-            flex: 1;
             display: flex;
             flex-direction: column;
             background: white;
@@ -48,7 +58,6 @@
         }
 
         .preview-container {
-            flex: 1;
             display: flex;
             flex-direction: column;
             padding: 16px;
@@ -324,20 +333,22 @@
 <body>
     <div class="toolbar">
         <button class="guide-toggle" onclick="toggleGuide()">使い方ガイド</button>
-        <button onclick="applyFormat('h1')" title="見出し1">H1</button>
-        <button onclick="applyFormat('h2')" title="見出し2">H2</button>
-        <button onclick="applyFormat('h3')" title="見出し3">H3</button>
-        <button onclick="applyFormat('bold')" title="太字"><strong>B</strong></button>
-        <button onclick="applyFormat('ul')" title="箇条書き">•</button>
-        <button onclick="applyFormat('ol')" title="番号付きリスト">1.</button>
-        <button onclick="applyFormat('caption')" title="キャプション">（C</button>
-        <button onclick="applyFormat('alt')" title="ALT">（ALT</button>
-        <button onclick="applyFormat('image')" title="画像">画像</button>
-        <button onclick="applyFormat('paragraph')" title="段落">P</button>
-        <button onclick="insertHR()" title="水平線">---</button>
-        <button onclick="deleteLine()" title="削除" style="color: #d32f2f;">削除</button>
-        <button onclick="insertLineBreak()" title="改行">改行</button>
-        <button onclick="resetAll()" title="リセット">リセット</button>
+        <div class="toolbar-buttons">
+            <button onclick="applyFormat('h1')" title="見出し1">H1</button>
+            <button onclick="applyFormat('h2')" title="見出し2">H2</button>
+            <button onclick="applyFormat('h3')" title="見出し3">H3</button>
+            <button onclick="applyFormat('bold')" title="太字"><strong>B</strong></button>
+            <button onclick="applyFormat('ul')" title="箇条書き">•</button>
+            <button onclick="applyFormat('ol')" title="番号付きリスト">1.</button>
+            <button onclick="applyFormat('caption')" title="キャプション">（C</button>
+            <button onclick="applyFormat('alt')" title="ALT">（ALT</button>
+            <button onclick="applyFormat('image')" title="画像">画像</button>
+            <button onclick="applyFormat('paragraph')" title="段落">P</button>
+            <button onclick="insertHR()" title="水平線">---</button>
+            <button onclick="deleteLine()" title="削除" style="color: #d32f2f;">削除</button>
+            <button onclick="insertLineBreak()" title="改行">改行</button>
+            <button onclick="resetAll()" title="リセット">リセット</button>
+        </div>
     </div>
     
     <div class="content-wrapper">
